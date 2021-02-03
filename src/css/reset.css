@@ -1,0 +1,8 @@
+body {
+  display: block;
+  background-color: pink;
+}
+
+div {
+  transform: rotate(45deg);
+}
