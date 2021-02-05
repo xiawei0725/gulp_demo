@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+  </head>
+  <body>
+  @@include('./include/view.html')
+  @@include('./include/var.html', {
+    "name": "haoxin",
+    "age": 12345,
+    "socials": {
+      "fb": "这是变量fb",
+      "tw": "这是变量tw"
+    }
+  })
+  </body>
+</html>

@@ -1,6 +1,4 @@
-const { bar } = require('./test.js')
 
-bar()
 
 const foo = x => x + 2
 

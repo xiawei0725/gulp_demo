@@ -6,11 +6,6 @@ require("core-js/modules/es.promise.js");
 
 require("core-js/modules/web.timers.js");
 
-var _require = require('./test.js'),
-    bar = _require.bar;
-
-bar();
-
 var foo = function foo(x) {
   return x + 2;
 };

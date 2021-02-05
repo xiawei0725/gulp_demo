@@ -1,4 +1,4 @@
-const { src, dest, watch, series, task } = require('gulp')
+const { src, dest, watch, series, lastRun, task } = require('gulp')
 const babel = require('gulp-babel')
 const uglify = require('gulp-uglify')
 const del = require('del')
@@ -8,15 +8,13 @@ const autoprefixer = require('gulp-autoprefixer')
 const browserSync = require('browser-sync').create()
 const cleanCSS = require('gulp-clean-css')
 const concat = require('gulp-concat')
-
 const browserify = require('browserify')
 const buffer = require('vinyl-buffer')
 const stream = require('vinyl-source-stream')
 const es = require('event-stream')
 const fs = require('fs')
 const join = require('path').join
-
-
+const fileinclude = require('gulp-file-include');
 
 
 
@@ -54,7 +52,7 @@ const join = require('path').join
 function serve(cb) {
   browserSync.init({
     server: {
-      baseDir: "./"
+      baseDir: "dist"
     }
   })
   cb()
@@ -81,13 +79,14 @@ function findSync(startPath) {
 }
 
 const folder = {
-  dist: 'dist/js_browser/',
+  dist: 'dist/umd/',
   temp: 'dist/'
 }
 
+const path = require('path')
 
-function browserProd(cb) {
-  let files = findSync(folder.temp + 'js')
+function polyfill(cb) {
+  let files = findSync(path.resolve(__dirname, 'dist/js'))
   var task = files.map(entry => {
     return browserify({
       entries: entry.path,
@@ -106,6 +105,14 @@ function browserProd(cb) {
 }
 
 
+function html(cb) {
+  src('src/index.html').pipe(fileinclude({
+    prefix: '@@',
+    basepath: '@file'
+  })).pipe(dest('dist'))
+  cb()
+}
+
 // 处理js 压缩混淆
 function js(cb) {
   src('src/js/**/*.js')
@@ -114,7 +121,7 @@ function js(cb) {
     // .pipe(uglify())
     //.pipe(sourcemaps.write())
     .pipe(dest('dist/js'))
-  // .pipe(browserSync.stream());
+    .pipe(browserSync.stream());
   cb()
 }
 
@@ -142,10 +149,22 @@ function css(cb) {
 }
 
 
+const imagemin = require('gulp-imagemin');
+function images(cb) {
+  src('src/images/**/*.{jpg,jpeg,png}')
+    .pipe(imagemin())
+    .pipe(dest('dist/images/'))
+  cb()
+}
+
+
+
 
 function watcher(cb) {
   watch('src/js/**/*.js', js)
-  watch(['src/css/**/*.scss', 'src/css/**/*.css'], css)
+  watch(['src/css/**/*.{css,scss}'], css)
+  watch('src/images/**/*.{jpg,jpeg,png}', images)
+  watch('src/**/*.html', html)
   cb()
 }
 
@@ -153,26 +172,26 @@ function watcher(cb) {
 exports.js = js
 exports.clean = clean
 exports.css = css
-exports.build1 = series([
+exports.images = images
+exports.html = html
+exports.patch = polyfill
+
+
+exports.build = series([
   clean,
   js,
   css,
-  browserProd,
+  images,
+  html,
 ])
-exports.build2 = series([
-  clean,
-  js,
-  css
-])
-
-
-
 
 
 exports.default = series([
   clean,
   js,
   css,
+  images,
+  html,
   serve,
   watcher
 ])
